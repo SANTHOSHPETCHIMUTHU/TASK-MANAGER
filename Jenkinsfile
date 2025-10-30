@@ -8,7 +8,7 @@ pipeline {
 
     environment {
         // Redirect Maven local repository to a safe custom folder
-        MAVEN_OPTS = '-Dmaven.repo.local=C:\\Jenkins\\maven-repo'
+        MAVEN_OPTS = '-Dmaven.repo.local=C:\\jenkins\\maven-repo'
     }
 
     stages {
