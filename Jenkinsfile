@@ -89,17 +89,17 @@ pipeline {
 
         stage('Frontend (Optional Skip)') {
             steps {
-                echo 'Skipping frontend build — NodeJS setup not stable yet.'
+                echo 'Skipping frontend build - NodeJS setup not yet configured.'
             }
         }
     }
 
     post {
         success {
-            echo '✅ Pipeline completed successfully. All backend tests passed and artifacts packaged.'
+            echo 'Pipeline completed successfully. All backend tests passed and artifacts packaged.'
         }
         failure {
-            echo '❌ Pipeline failed. Check logs for Maven or test errors.'
+            echo 'Pipeline failed. Check logs for Maven or test errors.'
         }
     }
 }
