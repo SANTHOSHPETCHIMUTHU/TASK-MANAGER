@@ -1,87 +1,57 @@
 pipeline {
-    // 1. Define Agent
-    // Use 'any' for simplicity. You can change to a specific agent label later.
     agent any
 
-    // 2. Define Tools
-    // IMPORTANT: You must configure these tools in Jenkins
-    // Go to "Manage Jenkins" > "Global Tool Configuration"
     tools {
-        maven 'Maven 3.8.6' // Must match the name you gave it in Jenkins
-        jdk 'Java 17'       // Must match the name you gave it in Jenkins
-        nodejs 'NodeJS 18'  // Must match the name you gave it in Jenkins
+        maven 'Maven 3.8.6'
+        jdk 'Java 17'
     }
 
     stages {
-        // 3. Checkout Code
-        stage('Checkout') {
+
+        stage('Checkout Code') {
             steps {
-                // This will check out the code from the branch Jenkins is building
                 checkout scm
             }
         }
 
-        // 4. Run All Backend Tests in Parallel
         stage('Backend Tests') {
             parallel {
-                stage('Test: Auth Service') {
+                stage('Auth Service Tests') {
                     steps {
                         dir('backend/auth-service') {
-                            sh 'mvn -B clean test'
+                            bat 'mvn -B clean test'
                         }
                     }
                 }
-                stage('Test: Employee Service') {
+                stage('Employee Service Tests') {
                     steps {
                         dir('backend/employee-service') {
-                            sh 'mvn -B clean test'
+                            bat 'mvn -B clean test'
                         }
                     }
                 }
-                stage('Test: Task Service') {
+                stage('Task Service Tests') {
                     steps {
                         dir('backend/task-service') {
-                            sh 'mvn -B clean test'
+                            bat 'mvn -B clean test'
                         }
                     }
                 }
             }
-            // 5. Publish Test Results
-            // This is what ma'am asked about. It collects all XML reports.
             post {
                 always {
-                    echo 'Archiving JUnit test results...'
-                    // This glob pattern finds reports in all 3 microservices
+                    echo 'Collecting backend test reports...'
                     junit 'backend/*/target/surefire-reports/*.xml'
                 }
             }
         }
 
-        // 6. Run Frontend Test & Build
-        stage('Frontend Test & Build') {
-            steps {
-                dir('frontend/task-tracker-ui') {
-                    sh 'npm install'
-                    sh 'npm test' // This runs your frontend tests (add them!)
-                    sh 'npm run build' // This builds the React app for production
-                }
-            }
-            post {
-                success {
-                    echo 'Archiving frontend build artifacts...'
-                    archiveArtifacts artifacts: 'frontend/task-tracker-ui/dist/**', fingerprint: true
-                }
-            }
-        }
-
-        // 7. Build Backend JARs
-        // This stage only runs if all tests passed
-        stage('Backend Package') {
+        stage('Package Backend JARs') {
             parallel {
-                stage('Package: Auth') {
+                stage('Auth Package') {
                     steps {
                         dir('backend/auth-service') {
-                            sh 'mvn -B clean package -DskipTests'
+                            bat 'mvn -B clean package -DskipTests'
                         }
                     }
                     post {
@@ -90,10 +60,10 @@ pipeline {
                         }
                     }
                 }
-                stage('Package: Employee') {
+                stage('Employee Package') {
                     steps {
                         dir('backend/employee-service') {
-                            sh 'mvn -B clean package -DskipTests'
+                            bat 'mvn -B clean package -DskipTests'
                         }
                     }
                     post {
@@ -102,10 +72,10 @@ pipeline {
                         }
                     }
                 }
-                stage('Package: Task') {
+                stage('Task Package') {
                     steps {
                         dir('backend/task-service') {
-                            sh 'mvn -B clean package -DskipTests'
+                            bat 'mvn -B clean package -DskipTests'
                         }
                     }
                     post {
@@ -117,36 +87,19 @@ pipeline {
             }
         }
 
-        // 8. Build Docker Images (Optional, for demo)
-        // This only runs on the 'main' branch
-        stage('Build Docker Images') {
-            when {
-                branch 'main'
+        stage('Frontend (Optional Skip)') {
+            steps {
+                echo 'Skipping frontend build — NodeJS setup not stable yet.'
             }
-            // Assumes Dockerfile is in each service's root
-            parallel {
-                stage('Docker: Auth') {
-                    steps {
-                        dir('backend/auth-service') {
-                            sh 'docker build -t santhoshpetchimuthu/auth-service:latest .'
-                        }
-                    }
-                }
-                stage('Docker: Employee') {
-                    steps {
-                        dir('backend/employee-service') {
-                            sh 'docker build -t santhoshpetchimuthu/employee-service:latest .'
-                        }
-                    }
-                }
-                stage('Docker: Task') {
-                    steps {
-                        dir('backend/task-service') {
-                            sh 'docker build -t santhoshpetchimuthu/task-service:latest .'
-                        }
-                    }
-                }
-            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Pipeline completed successfully. All backend tests passed and artifacts packaged.'
+        }
+        failure {
+            echo '❌ Pipeline failed. Check logs for Maven or test errors.'
         }
     }
 }
