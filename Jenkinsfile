@@ -6,6 +6,11 @@ pipeline {
         jdk 'Java 17'
     }
 
+    environment {
+        // Redirect Maven local repository to a safe custom folder
+        MAVEN_OPTS = '-Dmaven.repo.local=C:\\Jenkins\\maven-repo'
+    }
+
     stages {
 
         stage('Checkout Code') {
@@ -19,21 +24,21 @@ pipeline {
                 stage('Auth Service Tests') {
                     steps {
                         dir('backend/auth-service') {
-                            bat 'mvn -B clean test'
+                            bat 'mvn %MAVEN_OPTS% -B clean test'
                         }
                     }
                 }
                 stage('Employee Service Tests') {
                     steps {
                         dir('backend/employee-service') {
-                            bat 'mvn -B clean test'
+                            bat 'mvn %MAVEN_OPTS% -B clean test'
                         }
                     }
                 }
                 stage('Task Service Tests') {
                     steps {
                         dir('backend/task-service') {
-                            bat 'mvn -B clean test'
+                            bat 'mvn %MAVEN_OPTS% -B clean test'
                         }
                     }
                 }
@@ -51,7 +56,7 @@ pipeline {
                 stage('Auth Package') {
                     steps {
                         dir('backend/auth-service') {
-                            bat 'mvn -B clean package -DskipTests'
+                            bat 'mvn %MAVEN_OPTS% -B clean package -DskipTests'
                         }
                     }
                     post {
@@ -63,7 +68,7 @@ pipeline {
                 stage('Employee Package') {
                     steps {
                         dir('backend/employee-service') {
-                            bat 'mvn -B clean package -DskipTests'
+                            bat 'mvn %MAVEN_OPTS% -B clean package -DskipTests'
                         }
                     }
                     post {
@@ -75,7 +80,7 @@ pipeline {
                 stage('Task Package') {
                     steps {
                         dir('backend/task-service') {
-                            bat 'mvn -B clean package -DskipTests'
+                            bat 'mvn %MAVEN_OPTS% -B clean package -DskipTests'
                         }
                     }
                     post {
@@ -89,7 +94,7 @@ pipeline {
 
         stage('Frontend (Optional Skip)') {
             steps {
-                echo 'Skipping frontend build - NodeJS setup not yet configured.'
+                echo 'Skipping frontend build — NodeJS setup not yet configured.'
             }
         }
     }
